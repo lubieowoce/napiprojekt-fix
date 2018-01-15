@@ -1,0 +1,42 @@
+{
+    "_meta": {
+        "hash": {
+            "sha256": "dbb4e3fb84c172b6bb45b6a227bba5d38e78cf2fd8a31bad5f1f273957fdb631"
+        },
+        "host-environment-markers": {
+            "implementation_name": "cpython",
+            "implementation_version": "3.5.4",
+            "os_name": "nt",
+            "platform_machine": "AMD64",
+            "platform_python_implementation": "CPython",
+            "platform_release": "10",
+            "platform_system": "Windows",
+            "platform_version": "10.0.16299",
+            "python_full_version": "3.5.4",
+            "python_version": "3.5",
+            "sys_platform": "win32"
+        },
+        "pipfile-spec": 6,
+        "requires": {
+            "python_version": "3.5"
+        },
+        "sources": [
+            {
+                "name": "pypi",
+                "url": "https://pypi.python.org/simple",
+                "verify_ssl": true
+            }
+        ]
+    },
+    "default": {
+        "typing": {
+            "hashes": [
+                "sha256:349b1f9c109c84b53ac79ac1d822eaa68fc91d63b321bd9392df15098f746f53",
+                "sha256:63a8255fe7c6269916baa440eb9b6a67139b0b97a01af632e7bd2842e1e02f15",
+                "sha256:d514bd84b284dd3e844f0305ac07511f097e325171f6cc4a20878d11ad771849"
+            ],
+            "version": "==3.6.2"
+        }
+    },
+    "develop": {}
+}

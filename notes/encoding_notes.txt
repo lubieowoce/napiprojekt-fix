@@ -1,0 +1,36 @@
+﻿'ąćęłńóśźżŁŚŻ'
+'¹æê³ñóœŸ¿£Œ¯'
+
+"C:\Users\lubieowoce\Downloads\Bones.Season3\Bones.S03E03.Death in the Saddle.sub"
+
+"Bones.S03E03.Death in the Saddle.sub"
+
+
+
+
+>>> matching('ąćęłńóśźżŁŚŻ', '¹æê³ñóœŸ¿£Œ¯')
+[('windows-1250', 'windows-1252'), ('windows-1250', 'windows-1254'), ('windows-1250', 'windows-1258')]
+>>> en_de('¹æê³ñóœŸ¿£Œ¯', 'windows-1252', 'windows-1250')
+'ąćęłńóśźżŁŚŻ'
+
+def matching(s, r):
+    """ finds the encode-decode pairs that turn s into r."""
+	 return \
+	   lmap(lambda tri: (tri[1], tri[2]), \
+	   lfilter(lambda tri: tri[0] == r, \
+	   [(en_de(s, enc, dec), enc, dec) for enc, dec in enc_decs]))
+	
+
+
+def en_de(s:str, enc, dec) -> Optional[str]:
+    try:
+        return s.encode(enc).decode(dec)
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        return None
+
+# en_de back and forth
+def en_de_bf(s:str, enc, dec) -> Optional[str]:
+    o_s2 = en_de(s, enc, dec)
+    return en_de(o_s2, dec, enc) if o_s2 != None else None
+    
+def optional_is()
