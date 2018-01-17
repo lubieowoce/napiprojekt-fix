@@ -74,7 +74,7 @@ elif a.is_BazBaz():
 	UserUnionType = namedtuple(type_name, ['id__', 'val__'])
 
 	variant_names     = [name      for (name, val_names) in variant_specs]
-	variant_val_names = [val_names for (name, val_names) in variant_specs]
+	variant_attr_names = [val_names for (name, val_names) in variant_specs]
 	variant_ids = range(len(variant_names))
 	
 	# string representation
@@ -86,10 +86,10 @@ elif a.is_BazBaz():
 
 		for (variant_id, variant_name) in zip(variant_ids, variant_names):
 			if x.id__ == variant_id:
-				this_variant_val_names = variant_val_names[variant_id]
-				val_reprs = (name + '=' + value.__repr__()  for (name, value) in zip(this_variant_val_names, x.val__))
-				vals_repr = str.join(', ', val_reprs)
-				return variant_name + '(' + vals_repr + ')'
+				this_variant_attr_names = variant_attr_names[variant_id]
+				attr_reprs = (name + '=' + value.__repr__()  for (name, value) in zip(this_variant_attr_names, x.val__))
+				all_attrs_repr = str.join(', ', attr_reprs)
+				return variant_name + '(' + all_attrs_repr + ')'
 
 	UserUnionType.__str__ = __str__
 	UserUnionType.__repr__ = __str__
@@ -121,26 +121,26 @@ elif a.is_BazBaz():
 
 		return attr_name_property
 
-	for (variant_id, (variant_name, this_variant_attr_names)) in zip(variant_ids, variant_specs):
-		for attr_name in this_variant_attr_names:
+	for (variant_id, (variant_name, attr_names)) in zip(variant_ids, variant_specs):
+		for attr_name in attr_names:
 			setattr(UserUnionType, attr_name,
 				    make_variant_attr_name_property(variant_id, variant_name, attr_name))
 
 
 	# constructors
 
-	def make_constructor(variant_id: int, variant_name: str, this_variant_attr_names: List[str]):
-
+	def make_constructor(variant_id: int, variant_name: str, attr_names: List[str]):
+		assert type(variant_id) == int and type(variant_name) == str and type(attr_names) == list
 		# Each variant gets a VariantNameVal namedtuple to store the values
-		backing_tuple_constructor = namedtuple(variant_name+"Val", this_variant_attr_names)
+		backing_tuple_constructor = namedtuple(variant_name+"Val", attr_names)
 
 		def constructor(*args, **kwargs):
 			# error checking
-			if len(this_variant_attr_names) != len(args)+len(kwargs):
+			if len(attr_names) != len(args)+len(kwargs):
 				raise Exception(type_name +'.'+variant_name + "'s constructor expected {e} args, got {g} "\
-							     .format(e=len(this_variant_attr_names), g=len(args)+len(kwargs)))
+							     .format(e=len(attr_names), g=len(args)+len(kwargs)))
 			for name in kwargs.keys():
-				if name not in this_variant_attr_names:
+				if name not in attr_names:
 					raise Exception(type_name +'.'+variant_name + "'s constructor got unexpected keyword argument '{n}'" \
 									 .format(n=name))
 			# actual constructor
@@ -159,14 +159,16 @@ elif a.is_BazBaz():
 
 	
 	UserUnionType.is_same_variant = lambda obj1, obj2: obj1.id__ == obj2.id__
-	UserUnionType.as_tuple = lambda obj: tuple(obj.val__)
 	UserUnionType.get_variant_name = lambda obj: variant_names[obj.id__]
 
-	# reexport nameduple methods
+	UserUnionType.as_tuple = lambda obj: tuple(obj.val__)
+	UserUnionType.get_values = UserUnionType.as_tuple
+
+	# reexport nameduple methods under different names
 	UserUnionType.as_dict  = lambda obj: obj.val__._asdict()
 	UserUnionType.replace  = lambda obj, **kwargs: obj._replace(val__=obj.val__._replace(**kwargs))
-	UserUnionType.__iter__ = lambda obj: obj.val__.__iter__()
-
+	# UserUnionType.__iter__ = lambda obj: obj.val__.__iter__() # can't do this - it breaks namedtuple's _asdict(), _replace(), _make(), and others
+	# use as_tuple and iter over that instead.
 
 	return [UserUnionType] + constructors
 
