@@ -6,6 +6,8 @@ from collections import namedtuple
 
 from typing import Any, Dict, Sequence
 
+from uniontype import uniontype
+
 from npf_utils import (
 	default_cmdline_options,
 	cmdline_options_to_internal_options,
@@ -54,10 +56,10 @@ def main():
 	options = cmdline_options_to_internal_options(cmdline_options)
 
 	print("Working in directory " + os.getcwd())
-	print("Mode: " + mode.name)
+	print("Mode: " + mode.get_variant_name())
 
-	if mode.id == MODE_SINGLE_FILE:
-		filename = mode.args
+	if mode.is_ModeSingleFile():
+		filename = mode.filename
 		print("Selected file: " + filename)
 		print()
 
@@ -65,8 +67,8 @@ def main():
 		process_file(filename, options)
 		# ****************************
 
-	elif mode.id == MODE_SINGLE_DIR:
-		dirname = mode.args
+	elif mode.is_ModeSingleDir():
+		dirname = mode.dirname
 		print("Selected dir: " + dirname)
 		dir_item_names = (os.path.join(dirname, name) for name in os.listdir(dirname))
 		dir_files = [name for name in dir_item_names if os.path.isfile(name)]
@@ -82,8 +84,8 @@ def main():
 				# ****************************
 				print()
 
-	elif mode.id == MODE_INVALID_ARGS:
-		error = mode.args
+	elif mode.is_ModeInvalidArgs:
+		error = mode.error
 		print()		
 		print(error)
 
@@ -137,30 +139,35 @@ def process_file(filename: str, options: Dict[str, Any]) -> IO_[None]:
 
 
 
-Mode = namedtuple("Mode", ["id", "name", "args"])
-MODE_SINGLE_FILE = 0; MODE_SINGLE_DIR = 1; MODE_CURRENT_DIR = 2; MODE_INVALID_ARGS = 3; MODE_NPF_ERROR = 4;
-ModeSingleFile =  lambda filename: Mode(MODE_SINGLE_FILE,  'single file',       filename)
-ModeSingleDir  =  lambda dirname:  Mode(MODE_SINGLE_DIR,   'single directory',  dirname)
-# ModeCurrentDir =  lambda:          Mode(MODE_CURRENT_DIR,  'current directory', None)
-ModeInvalidArgs = lambda error:    Mode(MODE_INVALID_ARGS, 'invalid args',      error)
-ModeNPFError    = lambda error:    Mode(MODE_NPF_ERROR,    'error',             error)
 
+Mode, \
+	SingleFile, \
+	SingleDir,  \
+	InvalidArgs, \
+	NPFError,  \
+= uniontype(
+'Mode', \
+	('SingleFile', ['filename']),
+	('SingleDir',  ['dirname']),
+	('InvalidArgs', ['error']),
+	('NPFError',    ['error']),
+)
 
 def cmd_args_to_mode(args: Sequence[str]) -> Mode:
 	if len(args) == 0:
-		mode = ModeSingleDir( os.getcwd() )
+		mode = Mode.SingleDir( os.getcwd() )
 	elif len(args) == 1:
 		arg = args[0]
 		if not os.path.exists(arg):
-			mode = ModeInvalidArgs("Error: no such file or directory: " + arg)
+			mode = Mode.InvalidArgs("Error: no such file or directory: " + arg)
 		elif os.path.isfile(arg):
-			mode = ModeSingleFile(arg)
+			mode = Mode.SingleFile(arg)
 		elif os.path.isdir(arg):
-			mode = ModeSingleDir(arg)
+			mode = Mode.SingleDir(arg)
 		else:
-			mode = ModeNPFError("Unkown error: " + str(args))
+			mode = Mode.NPFError("Unkown error: " + str(args))
 	else:
-		mode = ModeInvalidArgs("Error: invalid arguments: " + str.join(' ', args))
+		mode = Mode.InvalidArgs("Error: invalid arguments: " + str.join(' ', args))
 
 	return mode
 
