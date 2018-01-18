@@ -2,7 +2,7 @@ import re
 
 from collections import OrderedDict
 from typing import Any, Optional, Tuple, Sequence
-from uniontype import uniontype
+from uniontype import union, untyped_union
 
 # Fun = Callable
 # Regex = str
@@ -14,12 +14,12 @@ Token, \
 	IntToken, \
 	StringToken \
 	\
-= uniontype(
+= union(
 	'Token', [
-    	('ShortSwitchToken', ['letter']),
-    	('LongSwitchToken',  ['name'  ]),
-    	('IntToken',         ['value' ]),
-    	('StringToken',      ['value' ]),
+    	('ShortSwitchToken', [('letter', str)]),
+    	('LongSwitchToken',  [('name',   str)]),
+    	('IntToken',         [('value', int)]),
+    	('StringToken',      [('value', str)]),
     ]
 )
 
@@ -56,19 +56,19 @@ def tokenize_args(args: Sequence[str]) -> Sequence[Token]:
 # so it's not much of a tree...
 
 AST, \
-	(String, STRING), \
-	(Int,    INT), \
-	(NoArgSwitch,   NO_ARG_SWITCH), \
-	(OneArgSwitch,  ONE_ARG_SWITCH), \
-	(ManyArgSwitch, MANY_ARG_SWITCH) \
+	String, \
+	Int, \
+	NoArgSwitch, \
+	OneArgSwitch, \
+	ManyArgSwitch \
 	\
-= uniontype(
+= union(
 	'AST', [
-		('String',  ['value']),
-		('Int',     ['value']),
-		('NoArgSwitch',   ['name'        ]),
-		('OneArgSwitch',  ['name', 'arg' ]),
-		('ManyArgSwitch', ['name', 'args']),
+		('String',        [('value', str)]),
+		('Int',           [('value', int)]),
+		('NoArgSwitch',   [('name', str)                   ]),
+		('OneArgSwitch',  [('name', str), ('arg',  object) ]), # not great
+		('ManyArgSwitch', [('name', str), ('args', list)   ]), # not great
 	]
   )
 
@@ -96,16 +96,16 @@ assert text_to_switch_id['directory'] == 'directory'
 
 
 ArgSpec, \
-	(NoArgs,      NO_ARGS), \
-	(OptionalArg, OPTIONAL_ARG), \
-	(OneArg,      ONE_ARG), \
-	(ManyArgs,    MANY_ARGS), \
-= uniontype(
+	NoArgs, \
+	OptionalArg, \
+	OneArg, \
+	ManyArgs, \
+= union(
 	'ArgSpec', [
 		('NoArgs',      []),
-		('OptionalArg') ['name', 'type']
-		('OneArg',      ['name', 'type']),
-		('ManyArgs',    ['name', 'type']),
+		('OptionalArg') [('name', str), ('type', type)]
+		('OneArg',      [('name', str), ('type', type)]),
+		('ManyArgs',    [('name', str), ('type', type)]),
 	]
 )
 

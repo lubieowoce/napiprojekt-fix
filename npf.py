@@ -2,11 +2,10 @@ import sys
 import os
 import shutil
 
-from collections import namedtuple
 
 from typing import Any, Dict, Sequence
 
-from uniontype import uniontype
+from uniontype import union
 
 from npf_utils import (
 	default_cmdline_options,
@@ -58,7 +57,7 @@ def main():
 	print("Working in directory " + os.getcwd())
 	print("Mode: " + mode.get_variant_name())
 
-	if mode.is_ModeSingleFile():
+	if mode.is_SingleFile():
 		filename = mode.filename
 		print("Selected file: " + filename)
 		print()
@@ -67,7 +66,7 @@ def main():
 		process_file(filename, options)
 		# ****************************
 
-	elif mode.is_ModeSingleDir():
+	elif mode.is_SingleDir():
 		dirname = mode.dirname
 		print("Selected dir: " + dirname)
 		dir_item_names = (os.path.join(dirname, name) for name in os.listdir(dirname))
@@ -84,8 +83,13 @@ def main():
 				# ****************************
 				print()
 
-	elif mode.is_ModeInvalidArgs:
+	elif mode.is_InvalidArgs():
 		error = mode.error
+		print()		
+		print(error)
+
+	elif mode.is_NPFError():
+		error = mode.err
 		print()		
 		print(error)
 
@@ -145,13 +149,14 @@ Mode, \
 	SingleDir,  \
 	InvalidArgs, \
 	NPFError,  \
-= uniontype(
-'Mode', \
-	('SingleFile', ['filename']),
-	('SingleDir',  ['dirname']),
-	('InvalidArgs', ['error']),
-	('NPFError',    ['error']),
-)
+= union(
+	'Mode', [
+		('SingleFile', [('filename', str)]),
+		('SingleDir',  [('dirname', str)]),
+		('InvalidArgs', [('error', str)]),
+		('NPFError',    [('err', str)]),
+	]
+  )
 
 def cmd_args_to_mode(args: Sequence[str]) -> Mode:
 	if len(args) == 0:
@@ -160,10 +165,13 @@ def cmd_args_to_mode(args: Sequence[str]) -> Mode:
 		arg = args[0]
 		if not os.path.exists(arg):
 			mode = Mode.InvalidArgs("Error: no such file or directory: " + arg)
+
 		elif os.path.isfile(arg):
 			mode = Mode.SingleFile(arg)
+
 		elif os.path.isdir(arg):
 			mode = Mode.SingleDir(arg)
+
 		else:
 			mode = Mode.NPFError("Unkown error: " + str(args))
 	else:
