@@ -249,7 +249,7 @@ def union(
 	def make_variant_attr_name_property(attr_name: str):
 		# this_attr_types_in_variants = attr_name_to_types_in_variants[attr_name]
 		# variants_that_have_this_attr_name = this_attr_types_in_variants[]
-		@property
+		# @property
 		def attr_name_property(obj: UserUnionType) -> Union[ tuple(all_types_attr_name_can_have[attr_name]) ]:
 			try:
 				return getattr(obj.val__, attr_name)
@@ -265,6 +265,8 @@ def union(
 
 	for attr_name in all_attr_names:
 		setattr(UserUnionType, attr_name,
+			    property(make_variant_attr_name_property(attr_name)))
+		setattr(UserUnionType, 'get_' + attr_name,
 			    make_variant_attr_name_property(attr_name))
 
 
